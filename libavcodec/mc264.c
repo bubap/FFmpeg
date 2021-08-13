@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <unistd.h> //for usleep()
 #include <sys/time.h>
 
 extern int sendParameterToJavaEncoder(int w, int h, int bitrate, float framerate, int gop, int colorformat); //ffmpeg_jni.c
@@ -63,7 +62,6 @@ static av_cold int mediacodec264_init(AVCodecContext *avctx)
                                ,
                                avctx->gop_size, avctx->pix_fmt);
 
-    //usleep(500000);
     return 0;
 }
 
