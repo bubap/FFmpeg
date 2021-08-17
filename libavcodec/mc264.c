@@ -55,9 +55,6 @@ static av_cold int mediacodec264_init(AVCodecContext *avctx)
     av_log(avctx, AV_LOG_DEBUG, "  avctx->gop_size = %d\n", avctx->gop_size);
     av_log(avctx, AV_LOG_DEBUG, "  avctx->time_base.num, den=(%d, %d)\n", avctx->time_base.num, avctx->time_base.den); //1,25 or 50,1199
 
-    //avctx->profile = FF_PROFILE_H264_CONSTRAINED_BASELINE;
-    //av_log(avctx, AV_LOG_DEBUG, "  new avctx->profile = %d(0x%x)\n", avctx->profile, avctx->profile );
-
     sendParameterToJavaEncoder(avctx->width, avctx->height, avctx->bit_rate, (float)((float)avctx->time_base.den / (float)avctx->time_base.num) //25/1 or 1199/50
                                ,
                                avctx->gop_size, avctx->pix_fmt);
@@ -92,9 +89,9 @@ static int mediacodec264_frame(AVCodecContext *avctx, AVPacket *pkt, const AVFra
 
     if (frame)
     {
-        //unsigned char *pNewData = convI420toAsIs( frame );
+        // unsigned char *pNewData = convI420toAsIs(frame);
         unsigned char *pNewData = convI420toNV12Semi(frame);
-        //unsigned char *pNewData = convI420toNV12PackedSemi( frame );
+        // unsigned char *pNewData = convI420toNV12PackedSemi( frame );
         av_log(avctx, AV_LOG_DEBUG, "mediacodec264_frame() : linesize[0,1,2 = %d %d %d ...\n", frame->linesize[0], frame->linesize[1], frame->linesize[2]);
         sendFrameToJavaEncoder(pNewData, frame->linesize[0] * frame->height * 3 / 2, frame->linesize[0], frame->pts);
         free(pNewData);
