@@ -93,7 +93,7 @@ static int mediacodec264_frame(AVCodecContext *avctx, AVPacket *pkt, const AVFra
         unsigned char *pNewData = convI420toNV12Semi(frame);
         // unsigned char *pNewData = convI420toNV12PackedSemi( frame );
         av_log(avctx, AV_LOG_DEBUG, "mediacodec264_frame() : linesize[0,1,2 = %d %d %d ...\n", frame->linesize[0], frame->linesize[1], frame->linesize[2]);
-        sendFrameToJavaEncoder(pNewData, frame->linesize[0] * frame->height * 3 / 2, frame->linesize[0], frame->pts);
+        sendFrameToJavaEncoder(pNewData, frame->width * frame->height * 3 / 2, frame->linesize[0], frame->pts);
         free(pNewData);
     }
 
@@ -198,18 +198,22 @@ static unsigned char *convI420toAsIs(const AVFrame *frame)
 
 static unsigned char *convI420toNV12Semi(const AVFrame *frame)
 {
-    unsigned char *pNewData = malloc(frame->linesize[0] * frame->height * 3 / 2);
+    unsigned char *pNewData = malloc(frame->width * frame->height * 3 / 2);
     if (pNewData)
     {
         unsigned char *pt = pNewData;
+
         //copy Y
-        memcpy(pt, frame->data[0], frame->linesize[0] * frame->height);
-        pt += frame->linesize[0] * frame->height;
+        for (int i = 0; i < frame->height; i++)
+        {
+            memcpy(pt, frame->data[0] + i * frame->linesize[0], frame->width);
+            pt += frame->width;
+        }
 
         //copy U/V
-        for (int y = 0; y < (frame->height / 2); y++)
+        for (int y = 0; y < frame->height / 2; y++)
         {
-            for (int x = 0; x < frame->linesize[1]; x++)
+            for (int x = 0; x < frame->width / 2; x++)
             {
                 *pt++ = (unsigned char)frame->data[1][frame->linesize[1] * y + x];
                 *pt++ = (unsigned char)frame->data[2][frame->linesize[1] * y + x];
