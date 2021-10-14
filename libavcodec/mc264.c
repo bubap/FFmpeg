@@ -8,6 +8,7 @@
 #include "avcodec.h"
 #include "internal.h"
 #include "packet_internal.h"
+#include "encode.h"
 
 #include <float.h>
 #include <math.h>
@@ -102,7 +103,7 @@ static int mediacodec264_frame(AVCodecContext *avctx, AVPacket *pkt, const AVFra
 
 	if (getEncodedFrame(&encData, &encLen, &presentationTimeUs, &b_keyframe) >= 0)
 	{
-		if ((ret = ff_alloc_packet2(avctx, pkt, encLen, 0)) < 0)
+		if ((ret = ff_alloc_packet(avctx, pkt, encLen)) < 0)
 			return ret;
 
 		memcpy(pkt->data, encData, encLen);
