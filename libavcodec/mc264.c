@@ -18,10 +18,12 @@
 #include <stdint.h>
 #include <sys/time.h>
 
+#if CONFIG_MEDIACODEC
 extern int sendParameterToJavaEncoder(int w, int h, int bitrate, float framerate, int gop, int colorformat); //ffmpeg_jni.c
 extern int sendFrameToJavaEncoder(void *data, int length, int stride, uint64_t pts);						 //ffmpeg_jni.c
 extern int getEncodedFrame(void **data, int *length, int64_t *presentationTimeUs, int32_t *b_keyframe);		 //ffmpeg_jni.c
 extern int mediacodec_release(void);																		 //ffmpeg_jni.c
+#endif
 
 static unsigned char *convI420toAsIs(const AVFrame *frame);
 static unsigned char *convI420toNV12Semi(const AVFrame *frame);
@@ -39,6 +41,7 @@ typedef struct mediacodec264Context
 
 static av_cold int mediacodec264_init(AVCodecContext *avctx)
 {
+#if CONFIG_MEDIACODEC
 	mediacodec264Context *myCtx = avctx->priv_data;
 	myCtx->fps = (float)((float)avctx->time_base.den / (float)avctx->time_base.num); //25/1 or 1199/50
 	myCtx->frameIdx = 0;
@@ -59,12 +62,14 @@ static av_cold int mediacodec264_init(AVCodecContext *avctx)
 	sendParameterToJavaEncoder(avctx->width, avctx->height, avctx->bit_rate, (float)((float)avctx->time_base.den / (float)avctx->time_base.num) //25/1 or 1199/50
 							   ,
 							   avctx->gop_size, avctx->pix_fmt);
+#endif
 
 	return 0;
 }
 
 static int mediacodec264_frame(AVCodecContext *avctx, AVPacket *pkt, const AVFrame *frame, int *got_packet)
 {
+#if CONFIG_MEDIACODEC
 	mediacodec264Context *myCtx = avctx->priv_data;
 
 	unsigned char *encData;
@@ -159,6 +164,7 @@ static int mediacodec264_frame(AVCodecContext *avctx, AVPacket *pkt, const AVFra
 
 	if (frame)
 		myCtx->pts = frame->pts;
+#endif
 
 	return 0;
 }
@@ -180,6 +186,7 @@ static int mediacodec264_frame(AVCodecContext *avctx, AVPacket *pkt, const AVFra
  */
 static unsigned char *convI420toAsIs(const AVFrame *frame)
 {
+#if CONFIG_MEDIACODEC
 	unsigned char *pNewData = malloc(frame->linesize[0] * frame->height * 3 / 2);
 	if (pNewData)
 	{
@@ -195,10 +202,14 @@ static unsigned char *convI420toAsIs(const AVFrame *frame)
 		pt += frame->linesize[2] * frame->height / 2;
 	}
 	return pNewData;
+#endif
+
+	return 0;
 }
 
 static unsigned char *convI420toNV12Semi(const AVFrame *frame)
 {
+#if CONFIG_MEDIACODEC
 	unsigned char *pNewData = malloc(frame->width * frame->height * 3 / 2);
 	if (pNewData)
 	{
@@ -222,11 +233,15 @@ static unsigned char *convI420toNV12Semi(const AVFrame *frame)
 		}
 	}
 	return pNewData;
+#endif
+
+	return 0;
 }
 
 /* packed plane is a single plane */
 static unsigned char *convI420toNV12PackedSemi(const AVFrame *frame)
 {
+#if CONFIG_MEDIACODEC
 	unsigned char *pNewData = malloc(frame->linesize[0] * frame->height * 3 / 2);
 	if (pNewData)
 	{
@@ -248,16 +263,21 @@ static unsigned char *convI420toNV12PackedSemi(const AVFrame *frame)
 		}
 	}
 	return pNewData;
+#endif
+
+	return 0;
 }
 
 static av_cold int mediacodec264_close(AVCodecContext *avctx)
 {
+#if CONFIG_MEDIACODEC
 	mediacodec264Context *myCtx = avctx->priv_data;
 	av_log(avctx, AV_LOG_DEBUG, "mediacodec264_close() : Enter ...\n");
 
 	myCtx->b_close = 1;
 
 	mediacodec_release(); //call ffmpeg_jni.c :: mediacodec_release()
+#endif
 
 	return 0;
 }
